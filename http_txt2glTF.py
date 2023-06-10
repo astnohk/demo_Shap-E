@@ -12,8 +12,6 @@ from urllib.parse import urlparse, parse_qs
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-import websockets
-
 from util import txt2mesh
 from util import gltf_util
 
