@@ -10,6 +10,13 @@ This is the simple interface for [Shap-E](https://github.com/openai/shap-e) via 
 4. Use `txt2*.py` for one-time generation and `http_txt2*.py` for starting HTTP server.
 
 
+## Local Console
+
+`txt2*.py` can produce a one model file for each runs.
+`$ python3 txt2PLY.py --prompt "a boat" --output ./boat.ply`
+`$ python3 txt2glTF.py --prompt "a boat" --output ./boat.glb`
+
+
 ## HTTP Server
 
 You can run HTTP server for rendering and distributing generated 3D models as PLY, XYZ or glTF files.
