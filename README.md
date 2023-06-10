@@ -16,3 +16,11 @@ You can run HTTP server for rendering and distributing generated 3D models as PL
 GET `/request?prompt=prompt_text` or POST simple prompt text to `/request` could trigger rendering process on the server.
 Poll at `/getResult` will return 404 or 200 with result file path.
 Get the result file by accessing to the received file path as `/file_path`.
+
+
+## Google Colabolatory
+
+Here is [the sample for Google Colabolatory](ColabSample.ipynb).
+1. Create your [ngrok](https://ngrok.com/) account.
+2. Copy the sample code on your Colab.
+3. Runs the code.
