@@ -157,13 +157,15 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', help='Output Directory', type=str, default='./results')
+    parser.add_argument('--hostname', help='Hostname', type=str, default='0.0.0.0')
+    parser.add_argument('--port', help='Port', type=int, default=8080)
     args = parser.parse_args()
 
     resultDir = pathlib.Path(args.output).resolve()
     if not os.path.exists(resultDir):
         os.makedirs(resultDir)
 
-    httpAddress = ('0.0.0.0', 8080)
+    httpAddress = (args.hostname, args.port)
     thread_httpServer = threading.Thread(
             target=startHTTPServer,
             args=(httpAddress,),
