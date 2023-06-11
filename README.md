@@ -20,7 +20,8 @@ This is the simple interface for [Shap-E](https://github.com/openai/shap-e) via 
 ## HTTP Server
 
 You can run HTTP server for rendering and distributing generated 3D models as PLY, XYZ or glTF files.
-GET `/request?prompt=prompt_text` or POST simple prompt text to `/request` could trigger rendering process on the server.
+GET `/request?prompt=prompt_text&fileformat=FORMAT` or POST simple prompt text to `/request?fileformat=FORMAT` could trigger rendering process on the server.
+`FORMAT` will receives `ply`, `xyz` and `glTF`.
 Poll at `/getResult` will return 404 or 200 with result file path.
 Get the result file by accessing to the received file path as `/file_path`.
 
