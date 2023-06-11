@@ -12,7 +12,7 @@ from urllib.parse import urlparse, parse_qs
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from util import txt2mesh
+from util import txt2mesh, gltf_util, xyz_util
 
 resultDir = None
 requestQueue = queue.Queue(3)
@@ -29,10 +29,12 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         try:
             if parsed_path.path == '/request':
                 prompt = queries['prompt'][0]
+                fileformat = queries['fileformat'][0]
                 key = ''.join(random.choices('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', k=24))
                 try:
                     requestQueue.put({
                             'prompt': prompt,
+                            'fileformat': fileformat,
                             'key': key,
                         })
                 except queue.Full:
@@ -53,7 +55,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(json.dumps({
                             'code': 500,
-                            'message': 'Point-E is busy',
+                            'message': 'Shap-E is busy',
                         }).encode())
             elif parsed_path.path == '/getResult':
                 key = queries['key'][0]
@@ -114,10 +116,12 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         try:
             if parsed_path.path == '/request':
                 prompt = content
+                fileformat = queries['fileformat'][0]
                 key = ''.join(random.choices('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', k=24))
                 try:
                     requestQueue.put({
                             'prompt': prompt,
+                            'fileformat': fileformat,
                             'key': key,
                         })
                 except queue.Full:
@@ -189,10 +193,23 @@ if __name__ == '__main__':
             print(err)
 
         try:
-            # Write the mesh to a PLY file to import into some other program.
-            output_path = os.path.join(resultDir, '{}.ply'.format(request['key']))
-            with open(output_path, 'wb') as f:
-                mesh.write_ply(f)
+            if request['fileformat'] == 'ply':
+                # Write the mesh to a PLY file to import into some other program.
+                output_path = os.path.join(resultDir, '{}.ply'.format(request['key']))
+                with open(output_path, 'wb') as f:
+                    mesh.write_ply(f)
+            elif request['fileformat'] == 'xyz':
+                # Write the mesh to a PLY file to import into some other program.
+                output_path = os.path.join(resultDir, '{}.xyz'.format(request['key']))
+                xyz_util.write_xyz(
+                        output_path,
+                        mesh)
+            elif request['fileformat'] == 'glTF':
+                # Write the mesh to a PLY file to import into some other program.
+                output_path = os.path.join(resultDir, '{}.glb'.format(request['key']))
+                gltf_util.write_gltf(
+                        output_path,
+                        mesh)
             resultIndex[request['key']] = output_path
         except Exception as err:
             print('[ERROR] Save PLY: ', end='')
