@@ -12,7 +12,7 @@ from urllib.parse import urlparse, parse_qs
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from util import txt2mesh, gltf_util, xyz_util
+from util import txt2mesh, gltf_util, json_util, xyz_util
 
 resultDir = None
 requestQueue = queue.Queue(3)
@@ -42,41 +42,75 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     key = None
                     pass
                 if key is not None:
+                    response_data = json.dumps({
+                            'path': parsed_path.path,
+                            'response_data': {
+                                'key': key,
+                            },
+                        }).encode()
                     self.send_response(200)
                     self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', len(response_data))
                     self.end_headers()
-                    self.wfile.write(json.dumps({
-                            'code': 200,
-                            'key': key,
-                        }).encode())
+                    self.wfile.write(response_data)
                 else:
+                    response_data = json.dumps({
+                            'path': parsed_path.path,
+                            'message': 'Shap-E is busy',
+                        }).encode()
                     self.send_response(500)
                     self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', len(response_data))
                     self.end_headers()
-                    self.wfile.write(json.dumps({
-                            'code': 500,
-                            'message': 'Shap-E is busy',
-                        }).encode())
+                    self.wfile.write(response_data)
             elif parsed_path.path == '/getResult':
                 key = queries['key'][0]
-                filepath = resultIndex.get(key)
-                if filepath is None:
-                    filepath = ""
-                if os.path.exists(filepath):
-                    with open(filepath, 'rb') as f:
-                        data = f.read()
-                    self.send_response(200)
-                    self.send_header('Content-Type', mimetypes.guess_type(filepath))
-                    self.end_headers()
-                    self.wfile.write(data)
+                if resultIndex.get(key) is not None:
+                    result = resultIndex.get(key)
+                    if result.get('fileformat') == 'json':
+                        response_data = json.dumps({
+                                'path': parsed_path.path,
+                                'response_data': {
+                                    'key': key,
+                                    'data': result['data'],
+                                },
+                            }).encode()
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'application/json')
+                        self.send_header('Content-Length', len(response_data))
+                        self.end_headers()
+                        self.wfile.write(response_data)
+                    else:
+                        filepath = result.get('output_path')
+                        if (filepath is not None and
+                                os.path.exists(filepath)):
+                            with open(filepath, 'rb') as f:
+                                data = f.read()
+                            self.send_response(200)
+                            self.send_header('Content-Type', mimetypes.guess_type(filepath))
+                            self.send_header('Content-Length', len(data))
+                            self.end_headers()
+                            self.wfile.write(data)
+                        else:
+                            response_data = json.dumps({
+                                    'path': parsed_path.path,
+                                    'message': 'File Not Found',
+                                }).encode()
+                            self.send_response(404)
+                            self.send_header('Content-Type', 'application/json')
+                            self.send_header('Content-Length', len(response_data))
+                            self.end_headers()
+                            self.wfile.write(response_data)
                 else:
+                    response_data = json.dumps({
+                            'path': parsed_path.path,
+                            'message': 'Not Found',
+                        }).encode()
                     self.send_response(404)
                     self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', len(response_data))
                     self.end_headers()
-                    self.wfile.write(json.dumps({
-                            'code': 404,
-                            'message': 'Not Found',
-                        }).encode())
+                    self.wfile.write(response_data)
             else:
                 ## GET specified path
                 if str(absolutePath).startswith(resultDir) and os.path.exists(absolutePath):
@@ -85,26 +119,31 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                         data = f.read()
                     self.send_response(200)
                     self.send_header('Content-Type', mimetypes.guess_type(absolutePath))
+                    self.send_header('Content-Length', len(data))
                     self.end_headers()
                     self.wfile.write(data)
                 else:
+                    response_data = json.dumps({
+                            'path': parsed_path.path,
+                            'message': 'Not Found',
+                        }).encode()
                     self.send_response(404)
                     self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', len(response_data))
                     self.end_headers()
-                    self.wfile.write(json.dumps({
-                            'code': 404,
-                            'message': 'Not Found',
-                        }).encode())
+                    self.wfile.write(response_data)
         except Exception as err:
             print('[ERROR] MyHTTPRequestHandler.do_GET(): ', end='')
             print(err)
+            response_data = json.dumps({
+                    'path': parsed_path.path,
+                    'message': 'Internal Server Error',
+                }).encode()
             self.send_response(500)
             self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', len(response_data))
             self.end_headers()
-            self.wfile.write(json.dumps({
-                    'code': 500,
-                    'message': 'Internal Server Error',
-                }).encode())
+            self.wfile.write(response_data)
 
     def do_POST(self):
         parsed_path = urlparse(self.path)
@@ -129,22 +168,39 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     key = None
                     pass
                 if key is not None:
+                    response_data = json.dumps({
+                            'path': parsed_path.path,
+                            'response_data': {
+                                'key': key,
+                            },
+                        }).encode()
                     self.send_response(200)
-                    self.send_header('Content-Type', 'text/plain')
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', len(response_data))
                     self.end_headers()
-                    self.wfile.write(key.encode())
+                    self.wfile.write(response_data)
                 else:
+                    response_data = json.dumps({
+                            'path': parsed_path.path,
+                            'message': 'Shap-E is busy',
+                        }).encode()
                     self.send_response(500)
-                    self.send_header('Content-Type', 'text/plain')
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', len(response_data))
                     self.end_headers()
-                    self.wfile.write('Point-E is busy'.encode())
+                    self.wfile.write(response_data)
         except Exception as err:
             print('[ERROR] MyHTTPRequestHandler.do_POST(): ', end='')
             print(err)
+            response_data = json.dumps({
+                    'path': parsed_path.path,
+                    'message': 'Internal Server Error',
+                }).encode()
             self.send_response(500)
             self.send_header('Content-Type', 'text/plain')
+            self.send_header('Content-Length', len(response_data))
             self.end_headers()
-            self.wfile.write('Internal Server Error'.encode())
+            self.wfile.write(response_data)
 
 def startHTTPServer(server_address):
     print('Start HTTP Server...')
@@ -198,20 +254,37 @@ if __name__ == '__main__':
                 output_path = os.path.join(resultDir, '{}.ply'.format(request['key']))
                 with open(output_path, 'wb') as f:
                     mesh.write_ply(f)
+                resultIndex[request['key']] = {
+                        'fileformat': request['fileformat'],
+                        'output_path': output_path,
+                    }
             elif request['fileformat'] == 'xyz':
                 # Write the mesh to a PLY file to import into some other program.
                 output_path = os.path.join(resultDir, '{}.xyz'.format(request['key']))
                 xyz_util.write_xyz(
                         output_path,
                         mesh)
+                resultIndex[request['key']] = {
+                        'fileformat': request['fileformat'],
+                        'output_path': output_path,
+                    }
             elif request['fileformat'] == 'glTF':
                 # Write the mesh to a PLY file to import into some other program.
                 output_path = os.path.join(resultDir, '{}.glb'.format(request['key']))
                 gltf_util.write_gltf(
                         output_path,
                         mesh)
-            resultIndex[request['key']] = output_path
+                resultIndex[request['key']] = {
+                        'fileformat': request['fileformat'],
+                        'output_path': output_path,
+                    }
+            elif request['fileformat'] == 'json':
+                data = json_util.generate_json(mesh)
+                resultIndex[request['key']] = {
+                        'fileformat': request['fileformat'],
+                        'data': data,
+                    }
         except Exception as err:
-            print('[ERROR] Save PLY: ', end='')
+            print('[ERROR] Save : ', end='')
             print(err)
 
