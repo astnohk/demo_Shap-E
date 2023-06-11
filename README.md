@@ -7,7 +7,7 @@ This is the simple interface for [Shap-E](https://github.com/openai/shap-e) via 
 1. Install Python.
 2. Install Shape-E `https://github.com/openai/shap-e` as Python module.
 3. Clone this repository.
-4. Use `txt2*.py` for one-time generation and `http_txt2*.py` for starting HTTP server.
+4. Use `txt2*.py` for one-time generation and `http_txt2mesh.py` for starting HTTP server.
 
 
 ## Local Console
@@ -20,7 +20,7 @@ This is the simple interface for [Shap-E](https://github.com/openai/shap-e) via 
 ## HTTP Server
 
 You can run HTTP server for rendering and distributing generated 3D models as PLY, XYZ or glTF files.
-GET `/request?prompt=prompt_text&fileformat=FORMAT` or POST simple prompt text to `/request?fileformat=FORMAT` could trigger rendering process on the server.
+Run `$ python3 http_txt2mesh.py` and GET `/request?prompt=prompt_text&fileformat=FORMAT` or POST simple prompt text to `/request?fileformat=FORMAT` could trigger rendering process on the server.
 `FORMAT` will receives `ply`, `xyz` and `glTF`.
 Poll at `/getResult` will return 404 or 200 with result file path.
 Get the result file by accessing to the received file path as `/file_path`.
