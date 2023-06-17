@@ -1,5 +1,5 @@
 # demo_Shap-E
-Simple Demonstration Sample Program for Shap-E.
+Simple Demonstration Sample Providing HTTP API for Shap-E.
 This is the simple interface for [Shap-E](https://github.com/openai/shap-e) via console or HTTP API without Jupyter Notebook.
 
 ## Setup
